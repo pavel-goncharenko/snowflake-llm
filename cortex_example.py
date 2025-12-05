@@ -12,9 +12,9 @@ load_dotenv()
 
 connection_parameters = {
   "account": os.getenv("SNOWFLAKE_ACCOUNT"),
-  "user": "ADMIN",
+  "user": os.getenv("SNOWFLAKE_USER"),
   "password": os.getenv("SNOWFLAKE_PAT"),
-  "role": "SYSADMIN",
+  "role": os.getenv("SNOWFLAKE_ROLE"),
   "warehouse": "COMPUTE_WH",
 }
 session = Session.builder.configs(connection_parameters).create()
