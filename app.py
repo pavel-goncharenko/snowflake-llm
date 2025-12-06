@@ -1,10 +1,10 @@
 """Streamlit app for Snowflake Cortex Analyst integration"""
-import pandas as pd
 import os
+import pandas as pd
 from dotenv import load_dotenv
 from snowflake.snowpark import Session
-from streamlit_data import CortexAnalystClient
 import streamlit as st
+from streamlit_data import CortexAnalystClient
 
 load_dotenv()
 
@@ -19,7 +19,7 @@ def create_session():
         "role": os.getenv("SNOWFLAKE_ROLE"),
         "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
         "database": "DEMO",
-        "schema": "DEMO_BVPRJG"
+        "schema": os.getenv("SNOWFLAKE_USER")
     }
 
     return Session.builder.configs(connection_parameters).create()
@@ -28,9 +28,9 @@ def create_session():
 def create_analyst_client():
     """Create Cortex Analyst client"""
     return CortexAnalystClient(
-        account=os.getenv("SNOWFLAKE_ACCOUNT"),
-        user=os.getenv("SNOWFLAKE_USER"),
-        pat=os.getenv("SNOWFLAKE_PAT")
+        account=os.environ["SNOWFLAKE_ACCOUNT"],
+        user=os.environ["SNOWFLAKE_USER"],
+        pat=os.environ["SNOWFLAKE_PAT"]
     )
 
 # Main application
@@ -48,7 +48,7 @@ def main():
         return
 
     # Semantic view
-    semantic_view = "DEMO.DEMO_BVPRJG.SALES"
+    semantic_view = f"DEMO.{os.environ['SNOWFLAKE_USER']}.SALES"
     st.info(f"📊 Semantic View: **{semantic_view}**")
 
     # Question input
@@ -70,42 +70,41 @@ def main():
                 with st.spinner("🤖 Generating SQL query..."):
                     # Call Cortex Analyst REST API
                     response = analyst_client.send_message(question, semantic_view)
-                    
+
                     # Extract data from response
                     generated_sql = analyst_client.extract_sql(response)
                     text_response = analyst_client.extract_text(response)
                     suggestions = analyst_client.extract_suggestions(response)
-                    
+
                     # Show interpretation
                     if text_response:
                         st.info(f"📝 {text_response}")
-                    
+
                     # If there are suggestions - question is ambiguous
                     if suggestions:
                         st.warning("💡 Question is ambiguous. Try:")
                         for i, suggestion in enumerate(suggestions, 1):
                             st.write(f"{i}. {suggestion}")
-                    
+
                     # Show and execute SQL
                     elif generated_sql:
                         with st.expander("🔍 Generated SQL", expanded=False):
                             st.code(generated_sql, language='sql')
-                        
+
                         # Execute query
                         with st.spinner("🔄 Executing query..."):
                             result = session.sql(generated_sql).collect()
-                            
+
                             if result:
                                 df = pd.DataFrame([row.asDict() for row in result])
-                                
                                 st.subheader("📊 Results")
-                                st.dataframe(df, use_container_width=True)
+                                st.dataframe(df)
                                 st.success(f"✅ Query executed successfully! Rows returned: {len(df)}")
                             else:
                                 st.info("ℹ️ Query executed but returned no results")
                     else:
                         st.error("❌ SQL was not generated")
-                        
+
             except Exception as e:
                 st.error(f"❌ Error: {str(e)}")
                 with st.expander("🔍 Error Details"):
@@ -125,9 +124,8 @@ def main():
         - "Show sales by month for the last year"
         - "What is the average order value by category?"
         - "Which customers generated the most revenue?"
-        
-        **Semantic View:** DEMO.DEMO_BVPRJG.SALES
         """)
+
 
 if __name__ == "__main__":
     main()

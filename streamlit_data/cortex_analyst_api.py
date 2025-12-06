@@ -11,11 +11,6 @@ class CortexAnalystClient:
     def __init__(self, account: str, user: str, pat: str):
         """
         Initialize client
-        
-        Args:
-            account: Snowflake account (e.g., abc12345.us-east-1)
-            user: Username
-            password: Password or token
         """
         self.account = account
         self.user = user
@@ -31,14 +26,6 @@ class CortexAnalystClient:
     ) -> Dict[str, Any]:
         """
         Send question to Cortex Analyst
-        
-        Args:
-            question: Question in natural language
-            semantic_view: Fully qualified semantic view name (e.g., DB.SCHEMA.VIEW)
-            stream: Use streaming mode
-            
-        Returns:
-            Dict: API response
         """
 
         api_url = f"{self.base_url}/api/v2/cortex/analyst/message"
@@ -87,12 +74,6 @@ class CortexAnalystClient:
     def extract_sql(self, response: Dict[str, Any]) -> Optional[str]:
         """
         Extract SQL from API response
-        
-        Args:
-            response: API response
-            
-        Returns:
-            Optional[str]: SQL query or None
         """
         if 'message' in response and 'content' in response['message']:
             for content_block in response['message']['content']:
@@ -103,12 +84,6 @@ class CortexAnalystClient:
     def extract_text(self, response: Dict[str, Any]) -> Optional[str]:
         """
         Extract text response
-        
-        Args:
-            response: API response
-            
-        Returns:
-            Optional[str]: Text response or None
         """
         if 'message' in response and 'content' in response['message']:
             for content_block in response['message']['content']:
@@ -119,12 +94,6 @@ class CortexAnalystClient:
     def extract_suggestions(self, response: Dict[str, Any]) -> Optional[list]:
         """
         Extract suggestions for ambiguous questions
-        
-        Args:
-            response: API response
-            
-        Returns:
-            Optional[list]: List of suggestions or None
         """
         if 'message' in response and 'content' in response['message']:
             for content_block in response['message']['content']:
